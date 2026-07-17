@@ -2,8 +2,8 @@
 replicaCount: 1
 image:
   repository: ghcr.io/setaggnaw/chatterbox
-  tag: 08931184404ea9e7c0eb77f86a4c5ca0854ee72e
-  digest: "sha256:d1216eec3023692e4fa04a8882f4124dda00ef4a0c25e70648980fec42e3eea1"
+  tag: 1689a060c8e159cd12d52f53fa8cafa3fc1f6308
+  digest: "sha256:311be5a4765bcb87747fc00ae1e4ff0a09ea0982109a4df367d85e2767c28a94"
   pullPolicy: IfNotPresent
 resources:
   requests:
@@ -12,16 +12,13 @@ resources:
   limits:
     cpu: 100m
     memory: 48Mi
-
 ingress:
   enabled: true
   className: ""
   host: chatterbox.localdev.me
-
 tls:
   enabled: true
   issuerName: selfsigned
-
 externalSecret:
   enabled: true
   storeName: vault-backend
