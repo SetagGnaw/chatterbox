@@ -3,7 +3,8 @@ CHART := charts/chatterbox
 DEV_VALUES := gitops/environments/dev/values.yaml
 IMAGE ?= $(APP):local
 
-.PHONY: test vet run build image helm-lint helm-template check bootstrap
+.PHONY: test vet run build image helm-lint helm-template check bootstrap \
+	seed-secret
 
 test:
 	go test ./...
@@ -34,3 +35,6 @@ check:
 
 bootstrap:
 	./scripts/bootstrap.sh
+
+seed-secret:
+	./scripts/seed-secret.sh

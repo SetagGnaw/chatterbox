@@ -74,8 +74,8 @@ run_marker_check "Milestone 1 CI workflow implemented" \
   .github/workflows/ci.yaml 'TODO|exit 1'
 run_marker_check "Milestones 3-4 release workflow implemented" \
   .github/workflows/release.yaml 'TODO|exit 1'
-run_marker_check "Argo CD repository URL configured" \
-  gitops/argocd/application.yaml 'REPLACE_ME'
+run_check "Argo CD repository URL configured" bash -c \
+  "! grep -Enr 'REPLACE_ME' gitops/argocd gitops/platform"
 run_marker_check "Dev image repository configured" \
   gitops/environments/dev/values.yaml 'REPLACE_ME'
 

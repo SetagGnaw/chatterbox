@@ -61,3 +61,30 @@ probes:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# HTTP ingress. Disabled by default; the dev overlay turns it on. Note a bare
+# kind cluster has no ingress controller, so the object exists but does not
+# route until one is installed.
+ingress:
+  enabled: false
+  className: ""
+  host: chatterbox.localdev.me
+
+# cert-manager TLS. When enabled, a Certificate is issued by the named
+# ClusterIssuer into <fullname>-tls and referenced by the ingress.
+tls:
+  enabled: false
+  issuerName: selfsigned
+
+# external-secrets. When enabled, an ExternalSecret syncs a Secret named
+# <fullname>-env from the named ClusterSecretStore and the Deployment loads it
+# via envFrom. remoteKey is the secret path (KV v2 path under the store's
+# mount); remoteProperty (optional) selects a field within that secret.
+externalSecret:
+  enabled: false
+  storeName: vault-backend
+  refreshInterval: 1h
+  data:
+    - secretKey: GREETING
+      remoteKey: chatterbox/dev
+      remoteProperty: greeting

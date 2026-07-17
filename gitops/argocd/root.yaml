@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: chatterbox-dev
+  name: platform-root
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,13 +10,12 @@ spec:
   source:
     repoURL: https://github.com/SetagGnaw/chatterbox.git
     targetRevision: main
-    path: charts/chatterbox
-    helm:
-      valueFiles:
-        - ../../gitops/environments/dev/values.yaml
+    path: gitops/argocd/apps
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: chatterbox-dev
+    namespace: argocd
   syncPolicy:
     automated:
       allowEmpty: false
@@ -29,6 +28,5 @@ spec:
         factor: 2
         maxDuration: 3m
     syncOptions:
-      - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
       - PruneLast=true

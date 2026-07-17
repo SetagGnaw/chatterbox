@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-config
+  namespace: argocd
+  annotations:
+    # After the controllers (wave -3) but before the app (wave 0). Configures
+    # the platform: the cert-manager ClusterIssuer, the external-secrets
+    # ClusterSecretStore, and the Vault auth/policy/role Job (which runs first,
+    # via its own sync-wave, so the store validates against a configured Vault).
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SetagGnaw/chatterbox.git
+    targetRevision: main
+    path: gitops/platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - ApplyOutOfSyncOnly=true

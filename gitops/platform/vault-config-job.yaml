@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-configure
+  namespace: vault
+  annotations:
+    # A Job's pod template is immutable, so let Argo recreate it when the
+    # script changes and rerun it on each sync of this app.
+    argocd.argoproj.io/sync-options: Replace=true
+    # Run (and complete) before the ClusterSecretStore in this same app, so
+    # Vault auth is configured by the time external-secrets validates the store.
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  backoffLimit: 20
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: hashicorp/vault:2.0.3
+          env:
+            - name: VAULT_ADDR
+              value: http://vault.vault.svc:8200
+            - name: VAULT_TOKEN
+              value: "root"
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              echo "waiting for vault to be reachable..."
+              until vault status >/dev/null 2>&1; do sleep 3; done
+
+              # Enable the Kubernetes auth method (idempotent) and point it at
+              # the in-cluster API. Modern Vault uses its own pod token (granted
+              # system:auth-delegator by the chart) to review client tokens.
+              vault auth enable -path=kubernetes kubernetes 2>/dev/null || true
+              vault write auth/kubernetes/config \
+                kubernetes_host="https://kubernetes.default.svc:443"
+
+              # Read-only policy on the chatterbox KV path. KV v2 splits the
+              # data plane (secret/data/*, serves reads) from the metadata
+              # plane (secret/metadata/*, where LIST lives), so list is
+              # granted on metadata rather than on data.
+              vault policy write eso-read - <<'EOF'
+              path "secret/data/chatterbox/*" {
+                capabilities = ["read"]
+              }
+              path "secret/metadata/chatterbox/*" {
+                capabilities = ["read", "list"]
+              }
+              EOF
+
+              # Bind the external-secrets controller ServiceAccount to it.
+              vault write auth/kubernetes/role/external-secrets \
+                bound_service_account_names=external-secrets \
+                bound_service_account_namespaces=external-secrets \
+                policies=eso-read \
+                ttl=1h
+
+              # Provisioning is plumbing only (auth method, policy, role).
+              # Secret VALUES are never seeded from this committed manifest:
+              # populate secret/chatterbox/dev out of band with `make
+              # seed-secret`, which reads a gitignored local file. See docs.
+              echo "vault configured"

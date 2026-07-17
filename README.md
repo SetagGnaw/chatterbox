@@ -147,10 +147,16 @@ kubectl apply -n argocd --server-side --force-conflicts \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 kubectl wait --for=condition=Available deployment/argocd-server \
   -n argocd --timeout=180s
-kubectl apply -f gitops/argocd/application.yaml
+kubectl apply -f gitops/argocd/root.yaml
 kubectl get applications -n argocd
 kubectl get all -n chatterbox-dev
 ```
+
+The Argo layer is an App-of-Apps: `gitops/argocd/root.yaml` owns the child
+Applications under `gitops/argocd/apps/` (cert-manager, external-secrets,
+platform config, and the chatterbox app). `scripts/bootstrap.sh` applies the
+root; sync-waves order the controllers and their CRDs ahead of the custom
+resources that depend on them.
 
 Then prove the GitOps properties:
 
@@ -178,6 +184,23 @@ Add these only after the local loop works:
 
 Avoid starting with EKS. The local loop proves the control boundaries cheaply;
 moving an unclear design to AWS only adds cost and slower feedback.
+
+A first step toward "secret management without plaintext Git secrets" and TLS is
+already in place: cert-manager and external-secrets are installed as child
+Applications (from their upstream Helm charts) through the App-of-Apps root, plus
+HashiCorp Vault as the secret backend. cert-manager is wired with a self-signed
+`ClusterIssuer`; external-secrets points a `ClusterSecretStore` at in-cluster
+Vault (dev mode) using Kubernetes auth. The `platform-config` app holds all of
+this — the ClusterIssuer, the ClusterSecretStore, and a Vault config Job that
+enables the auth method and writes the role/policy (plumbing only — no secret
+values). The secret
+value is seeded out of band by `make seed-secret`, which reads it from the
+`GREETING` env var or a gitignored `.local/chatterbox-dev-secret.env` file and
+writes it into Vault — so the value is treated as a real secret and never lives
+in Git. Once seeded, the `ExternalSecret` reaches `SecretSynced` with no cloud
+dependency. Dev-mode Vault is ephemeral; a real environment swaps it for
+standalone/HA Vault and the self-signed issuer for ACME. The ingress object
+renders but only routes once an ingress controller is added.
 
 ## Design decisions worth being able to explain
 

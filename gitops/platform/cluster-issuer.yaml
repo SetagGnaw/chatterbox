@@ -1,0 +1,9 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  # Self-signed is the only issuer that works on a local kind cluster with no
+  # public DNS. It is enough to prove cert-manager issues certs end to end;
+  # swap for an ACME/Let's Encrypt issuer in a real environment.
+  selfSigned: {}

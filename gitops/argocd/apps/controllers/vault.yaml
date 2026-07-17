@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  annotations:
+    # Install alongside the controllers so it is up before vault-config (-2)
+    # seeds it and before the ClusterSecretStore (-1) points at it.
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.releases.hashicorp.com
+    chart: vault
+    targetRevision: 0.34.0
+    helm:
+      valuesObject:
+        server:
+          # Dev mode: single, auto-unsealed, in-memory Vault with a known root
+          # token and KV v2 mounted at secret/. Ephemeral and for local demos
+          # only; a real deploy uses standalone/HA with a real unseal path.
+          dev:
+            enabled: true
+            devRootToken: "root"
+        injector:
+          # We consume secrets through external-secrets, not the agent injector.
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

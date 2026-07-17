@@ -12,3 +12,21 @@ resources:
   limits:
     cpu: 100m
     memory: 48Mi
+
+ingress:
+  enabled: true
+  className: ""
+  host: chatterbox.localdev.me
+
+tls:
+  enabled: true
+  issuerName: selfsigned
+
+externalSecret:
+  enabled: true
+  storeName: vault-backend
+  refreshInterval: 1h
+  data:
+    - secretKey: GREETING
+      remoteKey: chatterbox/dev
+      remoteProperty: greeting

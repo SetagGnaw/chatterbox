@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Bootstrap the Milestone 5 local GitOps loop:
-# kind cluster, Argo CD installed via Helm, chatterbox Application.
-# Idempotent: safe to rerun after a partial failure.
+# kind cluster, Argo CD installed via Helm, App-of-Apps root Application.
+# The root app pulls in cert-manager, external-secrets, platform config, and
+# the chatterbox app. Idempotent: safe to rerun after a partial failure.
 
 set -euo pipefail
 
@@ -14,7 +15,7 @@ KUBE_CONTEXT="kind-${CLUSTER_NAME}"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 # Optional chart pin, e.g. ARGOCD_CHART_VERSION=8.1.2; empty means latest.
 ARGOCD_CHART_VERSION="${ARGOCD_CHART_VERSION:-}"
-APPLICATION_MANIFEST="gitops/argocd/application.yaml"
+ROOT_APP_MANIFEST="gitops/argocd/root.yaml"
 
 info() { printf '==> %s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -49,8 +50,8 @@ helm upgrade --install argocd argo/argo-cd \
   --timeout 10m \
   ${version_args[@]+"${version_args[@]}"}
 
-info "Applying the chatterbox Application"
-kubectl --context "$KUBE_CONTEXT" apply -f "$APPLICATION_MANIFEST"
+info "Applying the App-of-Apps root Application"
+kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_APP_MANIFEST"
 
 info "Argo CD applications"
 kubectl --context "$KUBE_CONTEXT" get applications -n "$ARGOCD_NAMESPACE"
@@ -72,6 +73,11 @@ cat <<EOF
 
     # Watch the app come up
     kubectl --context ${KUBE_CONTEXT} get all -n chatterbox-dev
+
+    # Seed the dev secret into Vault out of band (value never lives in Git;
+    # sourced from GREETING or .local/chatterbox-dev-secret.env). Run once
+    # Vault is up so external-secrets can sync it.
+    make seed-secret
 
   To tear everything down:
 

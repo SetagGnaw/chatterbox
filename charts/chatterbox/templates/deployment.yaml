@@ -41,6 +41,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.externalSecret.enabled }}
+          envFrom:
+            - secretRef:
+                name: {{ include "chatterbox.fullname" . }}-env
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
