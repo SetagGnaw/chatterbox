@@ -113,8 +113,7 @@ Requirements:
 4. Build once and publish an image tagged for the source commit.
 5. Capture the registry-produced `sha256` digest.
 6. Add OCI source/revision/version labels and retain build provenance.
-7. Pin third-party actions to immutable commit SHAs before treating the pipeline
-   as production-ready.
+7. Pin third-party actions to immutable commit SHAs before treating the pipeline as production-ready.
 
 Definition of done: the image is addressable by digest, traceable to one Git
 commit and workflow run, and reproducible without rebuilding during promotion.
