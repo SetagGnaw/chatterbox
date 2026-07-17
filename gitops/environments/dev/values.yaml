@@ -2,8 +2,8 @@
 replicaCount: 1
 image:
   repository: ghcr.io/setaggnaw/chatterbox
-  tag: 1689a060c8e159cd12d52f53fa8cafa3fc1f6308
-  digest: "sha256:311be5a4765bcb87747fc00ae1e4ff0a09ea0982109a4df367d85e2767c28a94"
+  tag: 52ca5464d7f62cf1ffc587719893b53716147534
+  digest: "sha256:e26c2830bc092d8703ca1ba285eb16288d59bcc8583b4894f3634da3a33cd2ef"
   pullPolicy: IfNotPresent
 resources:
   requests:
