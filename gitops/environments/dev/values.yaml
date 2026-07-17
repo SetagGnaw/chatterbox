@@ -1,12 +1,10 @@
 # yaml-language-server: $schema=../../../charts/chatterbox/values.schema.json
 replicaCount: 1
-
 image:
   repository: ghcr.io/setaggnaw/chatterbox
-  tag: bootstrap
-  digest: ""
+  tag: 8bb204e406607026ca62484220b4839b0fca5472
+  digest: "sha256:0c9a43f24db763f0b7345711b3ada0d3f5baf5650bad703995dca642534c69f6"
   pullPolicy: IfNotPresent
-
 resources:
   requests:
     cpu: 10m
