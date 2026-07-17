@@ -15,11 +15,32 @@ permissions:
 
 jobs:
   validate:
-    name: TODO - test, lint, render, and build
+    name: Test, lint, render, and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Implement Milestone 1
-        run: |
-          echo "TODO: implement the PR validation workflow from README.md"
-          exit 1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Run tests
+        run: make test
+
+      - name: Vet
+        run: make vet
+
+      - name: Lint Helm chart
+        run: make helm-lint
+
+      - name: Render Helm templates
+        run: make helm-template
+
+      - name: Build image
+        run: make image IMAGE=chatterbox:${{ github.sha }}

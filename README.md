@@ -20,7 +20,7 @@ and demonstrate end to end:
 ```mermaid
 flowchart LR
     Dev[Developer PR] --> CI[CI: test, lint, render, build]
-    CI --> Registry[GHCR immutable image]
+    CI --> Registry[GHCR immutable image] 
     Registry --> Promotion[Promotion PR updates image digest]
     Promotion --> Git[Git desired state]
     Git --> Argo[Argo CD pull and reconcile]
