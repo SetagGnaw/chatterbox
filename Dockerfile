@@ -1,14 +1,18 @@
 # syntax=docker/dockerfile:1.18
-FROM golang:1.26.5-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine AS build
 
 ARG VERSION=dev
+ARG TARGETOS
+ARG TARGETARCH
 WORKDIR /src
 
 COPY go.mod ./
 COPY cmd ./cmd
 
+# Tests run natively on the build platform; only the binary is
+# cross-compiled for the target platform.
 RUN CGO_ENABLED=0 go test ./... && \
-    CGO_ENABLED=0 go build \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
       -trimpath \
       -ldflags="-s -w -X main.version=${VERSION}" \
       -o /out/server \
