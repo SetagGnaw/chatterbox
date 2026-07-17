@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../../charts/chatterbox/values.schema.json
 replicaCount: 1
 
 image:
